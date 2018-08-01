@@ -7,17 +7,25 @@ from util import ValueIteration
 
 # If you decide 2a is true, prove it in blackjack.pdf and put "return None" for
 # the code blocks below.  If you decide that 2a is false, construct a counterexample.
+
+# d: if the inter-endstate moves give negative rewards, but moving to end_state gives a positive reward, then increasing 
+# random jumps should allow "bleeding in" of the positive rewards, increasing the Vopt if only action is to stay in current state or 
+#  quit the game. 
+# similarly, another MDP game that would increase the Vopt when introducing noise , would be if a reward is given when a state (s+1) is moved to which is contrary to the action (-1) taken
+
 class CounterexampleMDP(util.MDP):
     # Return a value of any type capturing the start state of the MDP.
     def startState(self):
         # BEGIN_YOUR_CODE (our solution is 1 line of code, but don't worry if you deviate from this)
-        raise Exception("Not implemented yet")
+        return 0
+        # raise Exception("Not implemented yet")
         # END_YOUR_CODE
 
     # Return a list of strings representing actions possible from |state|.
     def actions(self, state):
         # BEGIN_YOUR_CODE (our solution is 1 line of code, but don't worry if you deviate from this)
-        raise Exception("Not implemented yet")
+        return [-1,1]
+        # raise Exception("Not implemented yet")
         # END_YOUR_CODE
 
     # Given a |state| and |action|, return a list of (newState, prob, reward) tuples
@@ -25,13 +33,48 @@ class CounterexampleMDP(util.MDP):
     # Remember that if |state| is an end state, you should return an empty list [].
     def succAndProbReward(self, state, action):
         # BEGIN_YOUR_CODE (our solution is 1 line of code, but don't worry if you deviate from this)
-        raise Exception("Not implemented yet")
+        # raise Exception("Not implemented yet")
+            def IsEnd(s):
+                return s in [-n,+n]
+            def mix_probs(oldprobl, noise = 0.5): #orig_probs gives mapping a : [non-zero prob of moving from state an increment]
+                num_nzp = sum(p > 0 for p in oldprobl) #number of nonzero probabilities
+                return [ (((1-noise)*p + noise/num_nzp) if p> 0 else 0) for p in oldprobl]
+            def gen_reward(s_orig, s_new, a):
+                if IsEnd(s_new):
+                    return reward_d[s_new]
+                elif a == (s_new - s_orig):  #change in state as intended by action
+                    return -5
+                else:
+                    return 5
+            
+            # define graph (state and transition) space
+            n = 2
+            states = range(-n,n+1)
+            reward_d = {-n: 0, n: 0} #define reward for moving into end state
+            poss_transitions = {-1:[-1,1] , 1:[-1,1]} #action: transitions from current state given that action
+            orig_pd = {-1:[0.99,0.01], 1:[0.01,0.99]}  #{a: P(s-1),P(s+1)} corresponding to the *actions* list
+            # add noise:
+            noise = 0.5 #TOGGLE THIS
+            new_probs = mix_probs(orig_pd[action], noise)
+            #check :
+            if len(new_probs) != len(poss_transitions[action]) :
+                print ("new_probs list doesnt match up with actions list!")
+            
+            # return results: 
+            if IsEnd(state): #starting state is an endState -> return empty list
+                return []
+            # returns (newState, prob, reward) corresponding to edges of each action coming out of |state|.
+            edges = []
+            for i,trans in enumerate(poss_transitions[action]):
+                edges.append(((state+trans),new_probs[i],gen_reward(state,state+trans,action)))
+            return edges
         # END_YOUR_CODE
 
     # Set the discount factor (float or integer) for your counterexample MDP.
     def discount(self):
         # BEGIN_YOUR_CODE (our solution is 1 line of code, but don't worry if you deviate from this)
-        raise Exception("Not implemented yet")
+        return 1.0
+        # raise Exception("Not implemented yet")
         # END_YOUR_CODE
 
 ############################################################
