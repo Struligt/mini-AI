@@ -11,7 +11,7 @@ endstates = (-2,2)
 endstatereward = {-2:20, 2:100 }
 actions = (-1,1)
 usualreward = -5
-Tsa=np.array([[0.6,0.4], [0.8,0.2]]) #( [T(s,a=-1,s'=s-1),T(s,a=-1,s'=s+1)],[(T(s,a=+1,...))])
+Tsa=np.array([[0.6,0.4], [0.8,0.2]]) #( [T(s,a=-1,s'=s-1),T(s,a=-1,s'=s+1)];[(T(s,a=+1,...))])
 
 #create rewards table
 rewards=copy(endstatereward)

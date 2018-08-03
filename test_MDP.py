@@ -1,6 +1,14 @@
 from submission import *
 import util
 
+
+def mdpsolve(mdp):
+    solver = util.ValueIteration() #algorithm instantiated
+    solver.solve(mdp) #algo applied to the MDP problem
+    # print "Vopt : %s " %solver.V
+    print "optimal_policy : %s " %solver.pi
+    print("... done solving offline MDP.\n")
+
 def test_util():
     print("Testing util module : ")
     print("...creating simple mdp instance ... ")
@@ -11,8 +19,7 @@ def test_util():
     print "optimal_policy : %s " %solver.pi
     print("... done test_util.\n")
 
-def solve_Q1():
-    
+def solve_Q1():    
     class Q1(util.MDP):
         def __init__(self, n=2): self.n = n
         def startState(self): return 0
@@ -44,11 +51,8 @@ def solve_Q1():
     for _s in range(-mdp.n,mdp.n+1):
         for a in mdp.actions(_s):
             print "from state : %s, action = %s, edges : %s " %(_s, a, mdp.succAndProbReward(_s,a))
-    solver = util.ValueIteration() #algorithm instantiated
-    solver.solve(mdp) #algo applied to the MDP problem
-    print "Vopt : %s " %solver.V
-    print "optimal_policy : %s " %solver.pi
-    print("... done test_util.\n")
+    mdpsolve(mdp)
+
 
 def eg_Q2a():
     print("Attempting counterexample Q2a : ")
@@ -58,18 +62,47 @@ def eg_Q2a():
     # for _s in range(-mdp.n,mdp.n+1):
     #     for a in mdp.actions(_s):
     #         print "from state : %s, action = %s, edges : %s " %(_s, a, mdp.succAndProbReward(_s,a))
-    solver = util.ValueIteration() #algorithm instantiated
-    solver.solve(mdp) #algo applied to the MDP problem
-    print "Vopt : %s " %solver.V
-    print "optimal_policy : %s " %solver.pi
-    print("... done test_util.\n")
+    mdpsolve(mdp)
+
+def Q3_a_succprob():
+    print("Testing Q3_a_succprob .... ")
+    cardValues = [1,2,3]
+    multiplicity = 1 
+    threshold =  4
+    peekCost = 1
+
+    mdp = BlackjackMDP(cardValues, multiplicity, threshold, peekCost)
+    s = mdp.startState()
+    actions = mdp.actions(s) #['Take', 'Peek', 'Quit']
+    testcases = [((3,None,(1,1,0)),'Quit'),
+                ((0,None,(1,1,1)),'Peek'), ((0,None,(1,0,1)),'Peek'),((0,0,(1,0,1)),'Peek'),
+                ((3,0,(1,1,0)),'Take'),((3,1,(1,1,0)),'Take'), #should bust 
+                ((3,None,(1,1,0)),'Take'), #can either not or bust here
+                ((3,None,(1,0,0)),'Take')#should return (4,None,None)
+                ]
+    # testi = 0
+    # case = testcases[testi]
+    # print "From state %s, %s --> %s " %(case[0], case[1], mdp.succAndProbReward(case[0], case[1]))
+    for case in testcases:
+        print "From state %s, %s --> %s " %(case[0], case[1], mdp.succAndProbReward(case[0], case[1]))
+    
+def Q3_a_solve():
+    print("Trying to solve Q3_a_ .... ")
+    cardValues = [1,2,3]
+    multiplicity = 1 
+    threshold =  4
+    peekCost = 1
+
+    mdp = BlackjackMDP(cardValues, multiplicity, threshold, peekCost)
+    mdpsolve(mdp)
 
 def main():
     print("\nCS221 A4: MDP (optimal policy and value) submission.py testing :\n")
     # test_util()
     # solve_Q1()
-    eg_Q2a()
-
+    # eg_Q2a()
+    # Q3_a_succprob()
+    # Q3_a_solve()
 
 
 if __name__ == '__main__':

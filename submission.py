@@ -77,6 +77,26 @@ class CounterexampleMDP(util.MDP):
         # raise Exception("Not implemented yet")
         # END_YOUR_CODE
 
+
+class CounterexampleMDP2(util.MDP):
+    # another counterexample, though not sure this would be acceptable, as really there are no actions: regardless of action choice,
+    # you get same transition states and associated probs
+    def startState(self):
+        return 1
+
+    def actions(self, state):
+        if state == 1:
+            return [-1,1]
+        return []
+
+    def succAndProbReward(self, state, action):
+        if state == 1:
+            return [(0,.90,10),(2,.10,100)]
+        return []
+
+    def discount(self):
+        return 1
+
 ############################################################
 # Problem 3a
 
@@ -122,7 +142,69 @@ class BlackjackMDP(util.MDP):
     #   don't include that state in the list returned by succAndProbReward.
     def succAndProbReward(self, state, action):
         # BEGIN_YOUR_CODE (our solution is 53 lines of code, but don't worry if you deviate from this)
-        raise Exception("Not implemented yet")
+        
+        # state : (totalCardValueInHand, nextCardIndexIfPeeked, deckCardCounts)
+        # eg 3-card 1,2,3 with multiplicity one: startState : (0,None,(1,1,1)) -> successor actions [take,peek, quit]
+        # after peeking: s' : (0,1,(1,1,1)), cost = -peekCost -> successor actions [take,quit]
+        # after taking : (2,None,(1,0,1)) deterministically 
+        # after busting :  (2+3,None, None) (?? not (0,None,None)) or (2+3,None, None) cost = -(2+3)
+        # after quitting : (2, None, None), cost = 0
+        # if take last card,then return [(new totalCardValueInHand, None, *NONE* to indicate game done), prob=1, reward] :: quit 
+
+        def IsEnd(s): #if state is an endState -> return empty list
+                return s[2] is None
+
+        def gen_nextc(s): #generate (index of next card to be dealt, associated probability)
+            cc=s[2] #cardcount :: deck from which cards to be dealt : eg (1,0,1)
+            totalcs = sum(cc)
+            return [(i,numc/(1.0*totalcs))for i,numc in enumerate(cc) if numc]
+
+        def cc_adjust(cc,ci): #adusts cardcount :: state[2] for card index ci taken : eg (1,1,1),1 -> (1,0,1)
+            cc = list(cc)
+            cc[ci] -= 1
+            return tuple(cc)
+
+        def calc_result(s,p): #gives result depending on if empty deck or busted or neither
+            # if take last card,then return [(new totalCardValueInHand, None, *NONE* to indicate game done), prob, reward] :: quit 
+            # if busted, then set s[2] :: deckcount = None
+            if s[0] > self.threshold : #busted
+                return ((s[0], None, None),p,0)
+            elif all(numc == 0 for numc in s[2]): # if empty deck & not busted, then set deck -> None, reward -> valueHand
+                return ((s[0],s[1],None),p,s[0])
+            else:
+                return (s,p,0)
+            
+        results =[]
+        cardcount = state[2]
+        # go thru the different cases :
+        if IsEnd(state):
+            return []
+        if action == 'Take':
+            if state[1] is not None: #ie previous action was peeked, in which case card known
+                nextState = (state[0]+self.cardValues[state[1]],
+                                None,
+                                cc_adjust(cardcount,state[1]))
+                return [calc_result(nextState,1)]
+            else: #next card unknown
+                for nextci, prob in gen_nextc(state):
+                        nextState = (state[0]+self.cardValues[nextci], 
+                                        None, 
+                                        cc_adjust(cardcount,nextci))
+                        results.append(calc_result(nextState,prob))
+                return results
+        
+        elif action == 'Quit' :
+            return [((state[0], state[1], None),1,state[0])]
+
+        elif action == 'Peek':
+            if state[1] is not None: #you peeded before ...
+                return [] # if the player peeks twice in a row, then succAndProbReward() should return []    
+            else:
+                for nextci, prob in gen_nextc(state):
+                    nextState = (state[0], nextci, state[2])
+                    results.append((nextState,prob,-self.peekCost))
+                return results
+        # raise Exception("Not implemented yet")
         # END_YOUR_CODE
 
     def discount(self):
