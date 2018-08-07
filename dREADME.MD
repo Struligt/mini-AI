@@ -11,7 +11,31 @@ Q2b: if acyclical MDP, then Vopt at each node easier. Use memoization and a knap
 
 Q2c. easy : T*(R+disc*Vopt(s')) = T*disc*(R/disc+1*Vopt(s')) = T'*(R'+1*Vopt(s'))
 
-Q3. fine but long. Good use of control abstraction makes the code super-readable, easier-to-code.
+Q3a. fine but long. Good use of control abstraction makes the code super-readable, easier-to-code.
 
+Q3b. design card game to maximize frequency of peaking : 
+	# want to increase chances of busting so keep high cards, but not so much that optimal to stay
+    # need to have lower cards that allow adding without busting
 
-	
+	# cardValues = [1,2,3,4,5,6,7,8,9,10,11,12,13] # attempting mincard << threshold < 2*max card
+    # multiplicity = 4 #gave 2%, not 10% peek
+
+    # cardValues = [1,2,3,4,9,10] # #gave 5.5%
+    # multiplicity = 5 
+ 
+    # cardValues = [1,2,3,4,9,10,13] # #gave 5.6%
+    # multiplicity = 4 
+
+    # cardValues = [2,3,4,8,10,13] # gave 6.0%
+    # multiplicity = 4     
+
+    cardValues = [1,5,21] # attempting mincard << threshold < 2*max card
+    multiplicity = 6 #gave 8.4%     -->
+
+    <!-- SUCCESS -->
+    cardValues = [1,5,21] # attempting mincard << threshold < 2*max card
+    multiplicity = 12 # SUCCESS  >= 10%
+
+    print "cardValues = %s, mult = %" %(cardValues, multiplicity)
+
+Q4a. implement QLearningAlgorithm.incorporateFeedback(), which should take an (s,a,r,s′) tuple and update self.weights according to the standard Q-learning update.

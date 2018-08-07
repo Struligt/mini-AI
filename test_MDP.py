@@ -96,6 +96,18 @@ def Q3_a_solve():
     mdp = BlackjackMDP(cardValues, multiplicity, threshold, peekCost)
     mdpsolve(mdp)
 
+def Q4a_test():
+    # create a dummy RL_algo:
+    qla = QLearningAlgorithm(actions = lambda s : (-1,+1), 
+        discount = 1, 
+        featureExtractor = lambda s,a : [((s,a),1)], #dummy here; shud be a function that takes a state and action and returns a list of (feature name, feature value) pairs, in order to allow generalization
+        explorationProb=0.2)
+
+    qla.getAction(0)
+    qla.incorporateFeedback(0, -1, -5, -2) #incorporateFeedback(state, action, reward, newState):
+    qla.incorporateFeedback(0, -1, -5, None)
+
+
 def main():
     print("\nCS221 A4: MDP (optimal policy and value) submission.py testing :\n")
     # test_util()
@@ -103,6 +115,7 @@ def main():
     # eg_Q2a()
     # Q3_a_succprob()
     # Q3_a_solve()
+    Q4a_test()
 
 
 if __name__ == '__main__':

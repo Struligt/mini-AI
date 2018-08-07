@@ -219,7 +219,21 @@ def peekingMDP():
     optimal action at least 10% of the time.
     """
     # BEGIN_YOUR_CODE (our solution is 2 lines of code, but don't worry if you deviate from this)
-    raise Exception("Not implemented yet")
+    
+    # given params:
+    threshold =  20 
+    peekCost = 1
+    # my deck design:
+    
+    # cardValues = [1,2,3,4,5,6,7,8,9,10,11,12,13] # attempting mincard << threshold < 2*max card
+    # multiplicity = 4 #gave 2%, not 10% peek
+
+    cardValues = [1,5,21] # attempting mincard << threshold < 2*max card
+    multiplicity = 12 #gave 2%, not 10% peek    
+
+    return BlackjackMDP(cardValues, multiplicity, threshold, peekCost)
+
+    # raise Exception("Not implemented yet")
     # END_YOUR_CODE
 
 ############################################################
@@ -267,7 +281,22 @@ class QLearningAlgorithm(util.RLAlgorithm):
     # self.getQ() to compute the current estimate of the parameters.
     def incorporateFeedback(self, state, action, reward, newState):
         # BEGIN_YOUR_CODE (our solution is 12 lines of code, but don't worry if you deviate from this)
-        raise Exception("Not implemented yet")
+        # raise Exception("Not implemented yet")
+
+        eta = self.getStepSize()
+        predn = self.getQ(state,action)
+        features = self.featureExtractor(state,action) #a list of {feature name: feature value} pairs
+        if newState is None: #state is an endState
+            target = (reward+0)            
+        else:
+            Vopt_est = max(self.getQ(newState,a) for a in self.actions(newState))
+            target = (reward + self.discount*Vopt_est)
+        #update all relevant weights 
+        for f, v in self.featureExtractor(state, action):
+            self.weights[f] -= eta*(predn-target)*v
+    
+        
+    
         # END_YOUR_CODE
 
 # Return a single-element list containing a binary (indicator) feature
