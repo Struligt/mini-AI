@@ -341,7 +341,15 @@ def blackjackFeatureExtractor(state, action):
     total, nextCard, counts = state
 
     # BEGIN_YOUR_CODE (our solution is 8 lines of code, but don't worry if you deviate from this)
-    raise Exception("Not implemented yet")
+    featurev = [] #vector containing (feature key, feature value) , defined below
+    featurev.append(((action,total),1)) #action, hand total
+    if counts is not None : 
+        featurev.append(((action, tuple([1 if cc else 0 for cc in counts])),1)) #action, prescence of card list
+        for i,c in enumerate(counts): #ie for each card in eg (3,4,0,2) : 
+            featurev.append(((action, i,c),1)) #returns (action, card_index): 3
+    return featurev
+
+    # raise Exception("Not implemented yet")
     # END_YOUR_CODE
 
 ############################################################

@@ -42,10 +42,31 @@ Q4a. implement QLearningAlgorithm.incorporateFeedback(), which should take an (s
 
 - 
 
-Q5a. Observed : 
+Q4b. Comparison of Value-Iteration and Q-Learning results. 
+
+    For generalization of QL (ie Qˆopt (s,a) := w*phi(s,a) where phi, as in ML, extracts features - eg PCA - of (s,a) pair, returning a vector of features - eg (0 0 0 1 0 1 0 ..) - present ). Here, used the non-generalzing identityFeatureExtractor(state, action) whose featurekey is (state,action). Therfore, in this case, each w is paired with each (s,a) and so w = Qopt(s,a) providing no generalization. 
+
+    Observed : 
+
+
 	- Q-learn utility does not converge to the MDP value-iteration, since for each trial, semi-random (epsilon-greedy) path taken, not opimal path. In order to compare apples-with-apples, need to calculate max over a ( Qopt(s,a) = w*phi(s,a)) for startState.
 	- Each trial ends when you reach endState, so you need lots of trials to explore entire state, action space
 	- As numtrials increase, more weights are updated, & estimated Vopt converges on the value-iteration Vopt.
 	- For low numtrials, potentially lots of state, action combos unexplored, so therefore many weights potentially unupdated. This disappears as numtrials increases. 
 	- As complexity of problem increases (smallMDP -> largeMDP), the state,action space increases (exponentially here), and discrepancy btw VI and QL will reappear, requiring furhter increases in numtrials.
     - Vopt estimate always converges to Vopt as numtrials increase. Estimated optimal policy should converge but may not do so monotonically (since depends on paths taken)
+
+    ... data :
+    MDP problem         numtrials       policy difference        Vopt diff
+    -----------         ---------       -----------------        ---------
+    smallMDP                10            0.21 = 8/38 different      -50%
+    ""                      30000         0                           -1%                             
+    largeMDP                10            800/3000 = 0.26            -99%
+    ""                      30000         850/3000 = 0.29            -80%
+    ""                      300000        1070/3000 = 0.36           -50%
+
+
+
+Q4c. Using a better feature extractor. 
+
+    Now coding a feature extractor which enables some generalization - aka reduction in dimension of our weights. The feature extractor returns a list of (feature_key,feature_value) pairs, with , in this case, feature_key where the calculation goes, and feature_value simply being binary indicating presecence (0 by default to indicate doesn't have). 

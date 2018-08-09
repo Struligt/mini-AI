@@ -122,8 +122,8 @@ def Q4a_test():
 def Q4b():
     print "Comparing value iteration ag simulated Q-learning :"
 
-    mdp = largeMDP
-    numqtrials = 10
+    mdp = largeMDP #TOGGLE THIS
+    numqtrials = 10 #CHANGE THIS : eg 10, 10000, 300000
     print "...comparison for %s x %s MDP; Q-learning numtrials : %s" %(mdp.cardValues, mdp.multiplicity, numqtrials)
     
     # value iteration
@@ -168,7 +168,10 @@ def Q4b():
     # print(" \n *note: Q-learn utility does not converge to the MDP value-iteration, since for each trial, semi-random (epsilon-greedy) path taken, not opimal path. \
     # In order to compare apples-with-apples, need to calculate max over a (w*phi(s,a)) for startState, which is shown on next line. \n")
 
-
+def Q4c():
+    s = (3, None, (3,4,0))
+    fv = blackjackFeatureExtractor(s,'Take')
+    print "for state %s ... \n ... feature vector returned: %s" %(s,fv)
     
 
 def main():
@@ -179,7 +182,8 @@ def main():
     # Q3_a_succprob()
     # Q3_a_solve()
     # Q4a_test()
-    Q4b()
+    # Q4b()
+    Q4c()
 
 
 if __name__ == '__main__':
