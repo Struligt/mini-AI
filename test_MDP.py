@@ -1,13 +1,25 @@
 from submission import *
 import util
+import statistics
 
+# import numpy as np
+
+def plotQL(mylist):
+    import matplotlib.pyplot as plt
+    
+    fig = plt.figure()
+    fig.add_axes()
+    ax =  fig.add_subplot(111)
+    counts = [i for i,_ in enumerate(mylist)]
+    ax.plot(counts, mylist, color='lightblue', linewidth=3)
+    plt.show()
 
 def mdpsolve(mdp):
     solver = util.ValueIteration() #algorithm instantiated
     solver.solve(mdp) #algo applied to the MDP problem
-    # print "Vopt : %s " %solver.V
+    print "Vopt : %s " %solver.V
     print "optimal_policy : %s " %solver.pi
-    print("... done solving offline MDP.\n")
+    # print("... done solving offline MDP.\n")
 
 def test_util():
     print("Testing util module : ")
@@ -107,6 +119,57 @@ def Q4a_test():
     qla.incorporateFeedback(0, -1, -5, -2) #incorporateFeedback(state, action, reward, newState):
     qla.incorporateFeedback(0, -1, -5, None)
 
+def Q4b():
+    print "Comparing value iteration ag simulated Q-learning :"
+
+    mdp = largeMDP
+    numqtrials = 10
+    print "...comparison for %s x %s MDP; Q-learning numtrials : %s" %(mdp.cardValues, mdp.multiplicity, numqtrials)
+    
+    # value iteration
+    solver = util.ValueIteration() #algorithm instantiated
+    solver.solve(mdp) #algo applied to the MDP problem
+    
+    # q-learning simulate :
+    phi = identityFeatureExtractor
+    rl = QLearningAlgorithm(actions = mdp.actions , discount=mdp.discount(), featureExtractor = phi, explorationProb=0.2)
+    # simulate_QL_over_MDP(mdp, rl)
+    totPVs = util.simulate(mdp, rl, numTrials=numqtrials, verbose = False) #returns list of totRewards for each trial
+    # print " ........ totPVs : %s " %totPVs
+    print " ........ # non-zero weights = %s" %sum([1 for k,v in rl.weights.items() if v])
+    
+    Vopt_est = max(rl.weights[(mdp.startState(),a)] for a in rl.actions(mdp.startState() ) )
+    
+    print "...Comparison of Vopt : "
+    print " ... value iteration = expected optimal PV :: optimal utility of startState, stdev: ( %s, 0 )" %(solver.V[mdp.startState()])
+    print " ... q-learning: avg PV :: utility, stdev over all trials: ( %s, %s ) (see note * below)" %(statistics.mean(totPVs), statistics.stdev(totPVs))
+    print " ... q-learning: estimated optimal PV :: optimal utility of startState : ( %s, 0 )" %Vopt_est
+    # plotQL(totPVs) 
+    
+    print "...Comparison of policies (rerun with explorationProb = 0) : "
+    # rerun QL now with 0 exploration prob (since learned)
+    rl.explorationProb = 0
+    totPVs = util.simulate(mdp, rl, numTrials=numqtrials, verbose = False) #reruns simulation
+    Vopt_est = max(rl.weights[(mdp.startState(),a)] for a in rl.actions(mdp.startState() ) )
+    print " ... q-learning: estimated optimal PV :: optimal utility of startState : ( %s, 0 )" %Vopt_est
+    print " ... # non-zero weights = %s" %sum([1 for k,v in rl.weights.items() if v])
+
+    #sample weights :
+    # s = mdp.startState()
+    # print "weights for startState : %s" %{k:v for k,v in rl.weights.items() if k[0] == s}
+    # print "--> vip = %s" %max((rl.weights[(s,a)],a) for a in rl.actions(s) )[1]
+    
+    diffs = 0 #counts number of differences in policy btw VI and QL
+    for s,p in solver.pi.items() : # using value-iteration policy as starting point
+        vip = max((rl.weights[(s,a)],a) for a in rl.actions(s) )[1]
+        if vip != p :
+            diffs += 1
+    print "number of different policies btw VI and QL , out of total : %s / %s = %4.2f" %(diffs, len(solver.pi), diffs/(1.0*len(solver.pi)))
+    # print(" \n *note: Q-learn utility does not converge to the MDP value-iteration, since for each trial, semi-random (epsilon-greedy) path taken, not opimal path. \
+    # In order to compare apples-with-apples, need to calculate max over a (w*phi(s,a)) for startState, which is shown on next line. \n")
+
+
+    
 
 def main():
     print("\nCS221 A4: MDP (optimal policy and value) submission.py testing :\n")
@@ -115,7 +178,8 @@ def main():
     # eg_Q2a()
     # Q3_a_succprob()
     # Q3_a_solve()
-    Q4a_test()
+    # Q4a_test()
+    Q4b()
 
 
 if __name__ == '__main__':

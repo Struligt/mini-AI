@@ -39,3 +39,13 @@ Q3b. design card game to maximize frequency of peaking :
     print "cardValues = %s, mult = %" %(cardValues, multiplicity)
 
 Q4a. implement QLearningAlgorithm.incorporateFeedback(), which should take an (s,a,r,s′) tuple and update self.weights according to the standard Q-learning update.
+
+- 
+
+Q5a. Observed : 
+	- Q-learn utility does not converge to the MDP value-iteration, since for each trial, semi-random (epsilon-greedy) path taken, not opimal path. In order to compare apples-with-apples, need to calculate max over a ( Qopt(s,a) = w*phi(s,a)) for startState.
+	- Each trial ends when you reach endState, so you need lots of trials to explore entire state, action space
+	- As numtrials increase, more weights are updated, & estimated Vopt converges on the value-iteration Vopt.
+	- For low numtrials, potentially lots of state, action combos unexplored, so therefore many weights potentially unupdated. This disappears as numtrials increases. 
+	- As complexity of problem increases (smallMDP -> largeMDP), the state,action space increases (exponentially here), and discrepancy btw VI and QL will reappear, requiring furhter increases in numtrials.
+    - Vopt estimate always converges to Vopt as numtrials increase. Estimated optimal policy should converge but may not do so monotonically (since depends on paths taken)

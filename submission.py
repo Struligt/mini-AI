@@ -295,8 +295,6 @@ class QLearningAlgorithm(util.RLAlgorithm):
         for f, v in self.featureExtractor(state, action):
             self.weights[f] -= eta*(predn-target)*v
     
-        
-    
         # END_YOUR_CODE
 
 # Return a single-element list containing a binary (indicator) feature
@@ -320,7 +318,10 @@ def simulate_QL_over_MDP(mdp, featureExtractor):
     # that you add a few lines of code here to run value iteration, simulate Q-learning on the MDP,
     # and then print some stats comparing the policies learned by these two approaches.
     # BEGIN_YOUR_CODE
+
+    # see code in test_MDP.py instead
     pass
+
     # END_YOUR_CODE
 
 
