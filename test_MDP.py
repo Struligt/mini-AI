@@ -21,6 +21,17 @@ def mdpsolve(mdp):
     print "optimal_policy : %s " %solver.pi
     # print("... done solving offline MDP.\n")
 
+def dotProduct(d1, d2):
+    """
+    @param dict d1: a feature vector represented by a mapping from a feature (string) to a weight (float).
+    @param dict d2: same as d1
+    @return float: the dot product between d1 and d2
+    """
+    if len(d1) < len(d2):
+        return dotProduct(d2, d1)
+    else:
+        return sum(d1.get(f, 0) * v for f, v in d2.items())
+
 def test_util():
     print("Testing util module : ")
     print("...creating simple mdp instance ... ")
@@ -123,7 +134,7 @@ def Q4b():
     print "Comparing value iteration ag simulated Q-learning :"
 
     mdp = largeMDP #TOGGLE THIS
-    numqtrials = 10 #CHANGE THIS : eg 10, 10000, 300000
+    numqtrials = 30000 #CHANGE THIS : eg 10, 10000, 300000
     print "...comparison for %s x %s MDP; Q-learning numtrials : %s" %(mdp.cardValues, mdp.multiplicity, numqtrials)
     
     # value iteration
@@ -132,12 +143,15 @@ def Q4b():
     
     # q-learning simulate :
     phi = identityFeatureExtractor
+    # phi = blackjackFeatureExtractor
+
     rl = QLearningAlgorithm(actions = mdp.actions , discount=mdp.discount(), featureExtractor = phi, explorationProb=0.2)
     # simulate_QL_over_MDP(mdp, rl)
     totPVs = util.simulate(mdp, rl, numTrials=numqtrials, verbose = False) #returns list of totRewards for each trial
     # print " ........ totPVs : %s " %totPVs
     print " ........ # non-zero weights = %s" %sum([1 for k,v in rl.weights.items() if v])
     
+    # Vopt_est = max(rl.weights[(mdp.startState(),a)] for a in rl.actions(mdp.startState() ) )
     Vopt_est = max(rl.weights[(mdp.startState(),a)] for a in rl.actions(mdp.startState() ) )
     
     print "...Comparison of Vopt : "
@@ -169,10 +183,93 @@ def Q4b():
     # In order to compare apples-with-apples, need to calculate max over a (w*phi(s,a)) for startState, which is shown on next line. \n")
 
 def Q4c():
-    s = (3, None, (3,4,0))
-    fv = blackjackFeatureExtractor(s,'Take')
-    print "for state %s ... \n ... feature vector returned: %s" %(s,fv)
+    # s = (3, None, (3,4,0))
+    # fv = blackjackFeatureExtractor(s,'Take')
+    # print "for state %s , action 'Take' ... \n ... feature vector returned: %s" %(s,fv)
+
+    print "Comparing value iteration ag simulated Q-learning as in 4b but using better featureExtractor:"
+    phi = blackjackFeatureExtractor
+    mdp = smallMDP #smallMDP #TOGGLE THIS
+    numqtrials = 100 #CHANGE THIS : eg 10, 10000, 300000
+    print "...comparison for %s x %s MDP; Q-learning numtrials : %s" %(mdp.cardValues, mdp.multiplicity, numqtrials)
     
+    # value iteration:
+    solver = util.ValueIteration() #algorithm instantiated
+    solver.solve(mdp) #algo applied to the MDP problem
+    
+    # q-learning simulate :
+    rl = QLearningAlgorithm(actions = mdp.actions , discount=mdp.discount(), featureExtractor = phi, explorationProb=0.2)
+    totPVs = util.simulate(mdp, rl, numTrials=numqtrials, verbose = False) #returns list of totRewards for each trial
+    print " ........ # non-zero weights = %s" %sum([1 for k,v in rl.weights.items() if v])
+    
+    Vopt_est = max(dotProduct(rl.weights,dict(phi(mdp.startState(),a)) ) for a in rl.actions(mdp.startState() ) )
+    print "\n...Comparison of Vopt : "
+    print " ... value iteration = expected optimal PV :: optimal utility of startState, stdev: ( %s, 0 )" %(solver.V[mdp.startState()])
+    print " ... q-learning: avg PV :: utility, stdev over all trials: ( %s, %s ) (see note * below)" %(statistics.mean(totPVs), statistics.stdev(totPVs))
+    print " ... q-learning: estimated optimal PV :: optimal utility of startState : ( %s, 0 )" %Vopt_est
+    # plotQL(totPVs) 
+    
+    # Comparison of VI and QL policies:
+    print "\n...Comparison of policies (rerun with explorationProb = 0) : "
+    rl.explorationProb = 0 # rerun QL now with 0 exploration prob (since learned)
+    totPVs = util.simulate(mdp, rl, numTrials=numqtrials, verbose = False) #reruns simulation
+    Vopt_est = max(dotProduct(rl.weights,dict(phi(mdp.startState(),a)) ) for a in rl.actions(mdp.startState() ) )
+    print " ... q-learning: estimated optimal PV :: optimal utility of startState : ( %s, 0 )" %Vopt_est
+
+    diffs = 0 #counts number of differences in policy btw VI and QL
+    for s,p in solver.pi.items() : # using value-iteration policy as starting point
+        rlp = max((dotProduct(rl.weights,dict(phi(s,a)) ),a) for a in rl.actions(s) )[1]
+        if rlp != p :
+            diffs += 1
+            print "rlp : %s does not equal VIp : %s for state %s" %(rlp, p, s)
+    print "number of different policies btw VI and QL , out of total : %s / %s = %4.2f" %(diffs, len(solver.pi), diffs/(1.0*len(solver.pi)))
+    
+
+def Q4d():
+    origMDP = BlackjackMDP(cardValues=[1, 5], multiplicity=2, threshold=10, peekCost=1)
+    newThreshMDP = BlackjackMDP(cardValues=[1, 5], multiplicity=2, threshold=9, peekCost=1)
+
+    #run VI on original MDP to obtain policy:
+    solver = util.ValueIteration() #algorithm instantiated
+    solver.solve(origMDP) #algo applied to the MDP problem
+    print " ... VI Vopt(startState) = %s ." %(solver.V[origMDP.startState()])
+    pi0 = solver.pi
+
+    # apply this policy to an agent (in simulated mdp) playing the **new** MDP:
+    numqtrials = 30000
+    rl = util.FixedRLAlgorithm(pi0)
+    
+    mdp = origMDP
+    totPVs = util.simulate(mdp, rl, numTrials=numqtrials, verbose = False)
+    print " ... QL: avg PV, stdev using above VI opt policy on same mdp: ( %s, %s ) " %(statistics.mean(totPVs), statistics.stdev(totPVs))
+    
+    mdp = newThreshMDP
+    totPVs = util.simulate(mdp, rl, numTrials=numqtrials, verbose = False)
+    print "\n ... QL: avg PV, stdev using above VI opt policy on *NEW* mdp: ( %s, %s ) " %(statistics.mean(totPVs), statistics.stdev(totPVs))
+
+    # now skip the fixed policy and use QL :
+    phi = identityFeatureExtractor #blackjackFeatureExtractor
+
+    rl = QLearningAlgorithm(actions = mdp.actions , discount=mdp.discount(), featureExtractor = phi, explorationProb=0.5)
+    totPVs = util.simulate(mdp, rl, numTrials=numqtrials, verbose = False) 
+    Vopt_est = max(dotProduct(rl.weights,dict(phi(mdp.startState(),a)) ) for a in rl.actions(mdp.startState() ) )
+    print " ... QL: est. Vopt of startState : %s " %Vopt_est
+    # plotQL(totPVs) 
+    
+    # Comparison of VI and QL policies:
+    rl.explorationProb = 0 # rerun QL now with 0 exploration prob (since learned)
+    totPVs = util.simulate(mdp, rl, numTrials=numqtrials, verbose = False) #reruns simulation
+    Vopt_est = max(dotProduct(rl.weights,dict(phi(mdp.startState(),a)) ) for a in rl.actions(mdp.startState() ) )
+    print " ... QL: est. Vopt of startState re-run (with eps = 0) : %s " %Vopt_est
+
+
+
+    
+
+
+# def compare_changed_MDP(original_mdp, modified_mdp, featureExtractor):
+
+
 
 def main():
     print("\nCS221 A4: MDP (optimal policy and value) submission.py testing :\n")
@@ -183,7 +280,8 @@ def main():
     # Q3_a_solve()
     # Q4a_test()
     # Q4b()
-    Q4c()
+    # Q4c()
+    Q4d()
 
 
 if __name__ == '__main__':

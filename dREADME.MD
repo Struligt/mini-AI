@@ -57,16 +57,28 @@ Q4b. Comparison of Value-Iteration and Q-Learning results.
     - Vopt estimate always converges to Vopt as numtrials increase. Estimated optimal policy should converge but may not do so monotonically (since depends on paths taken)
 
     ... data :
-    MDP problem         numtrials       policy difference        Vopt diff
-    -----------         ---------       -----------------        ---------
+    MDP problem         numtrials       policy difference        Vopt diff          Comments
+    -----------         ---------       -----------------        ---------          ---------
     smallMDP                10            0.21 = 8/38 different      -50%
     ""                      30000         0                           -1%                             
-    largeMDP                10            800/3000 = 0.26            -99%
+    largeMDP                10            800/3000 = 0.26            -99%           
     ""                      30000         850/3000 = 0.29            -80%
-    ""                      300000        1070/3000 = 0.36           -50%
+    ""                      300000        1070/3000 = 0.36           -50%           *not sure why policy diff inc'd
+    largeMDP with featExt   30000          650/3000 = 0.20            -4%          feat-extr to generalize very impt!!
+
 
 
 
 Q4c. Using a better feature extractor. 
 
     Now coding a feature extractor which enables some generalization - aka reduction in dimension of our weights. The feature extractor returns a list of (feature_key,feature_value) pairs, with , in this case, feature_key where the calculation goes, and feature_value simply being binary indicating presecence (0 by default to indicate doesn't have). 
+
+    ?Why not make featureExtractor value being non-binary : eg initially thought about returning (action, card_index) feature_key giving feature_value = number of cards of card_index in deck.
+
+    Why not have featureExtractor include if you ve peeked or not ? - added this, and it improved score somewhat but not .
+
+
+    Further investigation - some policy differences arise when deck is None, whereupon VI says optimal is to take (& get reward) whereas RL says Quit ?!
+
+Q4d. What happens when the MDP changes underneath you?!
+

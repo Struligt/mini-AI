@@ -347,6 +347,11 @@ def blackjackFeatureExtractor(state, action):
         featurev.append(((action, tuple([1 if cc else 0 for cc in counts])),1)) #action, prescence of card list
         for i,c in enumerate(counts): #ie for each card in eg (3,4,0,2) : 
             featurev.append(((action, i,c),1)) #returns (action, card_index): 3
+    #added this as crazy that above specs dont include next card :
+    if nextCard is not None:
+        featurev.append((action,nextCard))
+    # else: #commented this out as doesn't add any sign explanatory power:
+    #     featurev.append((action,-1))
     return featurev
 
     # raise Exception("Not implemented yet")
